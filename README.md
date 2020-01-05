@@ -57,8 +57,7 @@ $ poetry run pytest
 You may also manually test by building a PEX with this plugin, as follows:
 
 ```bash
-$ poetry build
-$ pex flake8 dist/flake8_pantsbuild-0.1.0-py2.py3-none-any.whl --entry-point flake8 --interpreter-constraint='CPython>=3.6' --output-file flake8.pex
+$ pex flake8 . --entry-point flake8 --output-file flake8.pex
 $ vim example.py  # add whatever content you want
 $ ./flake.pex example.py
 ```
