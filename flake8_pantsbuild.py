@@ -10,13 +10,14 @@ else:
     from importlib_metadata import version
 
 
+PNT800 = (
+    "PNT800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
+    "classmethods, respectively."
+)
+
+
 class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
-
-    messages = {
-        "PNT800": "PNT800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance "
-        "methods and classmethods, respectively."
-    }
 
     def __init__(self):
         self.errors = []  # type: List[Tuple[int, int, str]]
@@ -31,7 +32,7 @@ class Visitor(ast.NodeVisitor):
                     (
                         node.value.lineno,
                         node.value.col_offset,
-                        self.messages["PNT800"].format(name=class_node.name, attr=node.attr),
+                        PNT800.format(name=class_node.name, attr=node.attr),
                     )
                 )
 

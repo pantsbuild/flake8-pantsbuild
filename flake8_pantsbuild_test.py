@@ -1,17 +1,12 @@
 # Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 # Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-import ast
 from textwrap import dedent
 
-from flake8_pantsbuild import Plugin
+from flake8_pantsbuild import PNT800
 
 
-def results(s):
-    return {"{}:{}: {}".format(*r) for r in Plugin(ast.parse(s)).run()}
-
-
-def test_pnt_800():
+def test_pnt_800(flake8dir):
     template = dedent(
         """\
         import os.path
@@ -24,10 +19,8 @@ def test_pnt_800():
                 return os.path.join({}.CONSTANT, value)
         """
     )
-    good = template.format("self")
-    bad = template.format("Example")
-    assert results(good) == set()
-    assert results(bad) == {
-        "8:29: PNT800 Instead of Example.CONSTANT use self.CONSTANT or cls.CONSTANT with "
-        "instance methods and classmethods, respectively."
-    }
+    flake8dir.make_py_files(good=template.format("self"), bad=template.format("Example"))
+    result = flake8dir.run_flake8()
+    assert PNT800.format(name="Example", attr="CONSTANT") in result.out
+    assert "./good.py" not in result.out
+    assert "./bad.py:8:29" in result.out

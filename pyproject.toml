@@ -18,9 +18,18 @@ flake8 = "^3.7"
 importlib_metadata = {version = "^1.3.0", python = "<3.8"}
 
 [tool.poetry.dev-dependencies]
-isort = "^4.3.21"
+black = {version = "^19.10b0", python = ">=3.6"}
+isort = {extras = ["pyproject"], version = "^4.3.21"}
 pytest = "~4.6"
+pytest-flake8dir = "^1.3.0"
 
 [tool.black]
 line-length = 100
 target-version = ['py27']
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 100
