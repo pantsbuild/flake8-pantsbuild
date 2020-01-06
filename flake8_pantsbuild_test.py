@@ -3,10 +3,10 @@
 
 from textwrap import dedent
 
-from flake8_pantsbuild import PNT800
+from flake8_pantsbuild import PB800
 
 
-def test_pnt_800(flake8dir):
+def test_pb_800(flake8dir):
     template = dedent(
         """\
         import os.path
@@ -21,6 +21,6 @@ def test_pnt_800(flake8dir):
     )
     flake8dir.make_py_files(good=template.format("self"), bad=template.format("Example"))
     result = flake8dir.run_flake8()
-    assert PNT800.format(name="Example", attr="CONSTANT") in result.out
+    assert PB800.format(name="Example", attr="CONSTANT") in result.out
     assert "./good.py" not in result.out
     assert "./bad.py:8:29" in result.out

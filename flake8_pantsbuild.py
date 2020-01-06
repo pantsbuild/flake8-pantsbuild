@@ -10,8 +10,8 @@ else:
     from importlib_metadata import version
 
 
-PNT800 = (
-    "PNT800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
+PB800 = (
+    "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
     "classmethods, respectively."
 )
 
@@ -32,7 +32,7 @@ class Visitor(ast.NodeVisitor):
                     (
                         node.value.lineno,
                         node.value.col_offset,
-                        PNT800.format(name=class_node.name, attr=node.attr),
+                        PB800.format(name=class_node.name, attr=node.attr),
                     )
                 )
 
