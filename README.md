@@ -36,7 +36,7 @@ If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pyc
 
 TODO
 
-## Developers Guide
+## Development
 
 We use [Poetry](https://python-poetry.org) for dependency management, building the wheel, and publishing.
 
@@ -50,8 +50,10 @@ This will use whichever version `python` points to. You can set `poetry env use 
 
 ### To test
 
+We use [tox](https://testrun.org/tox/en/latest/) for test automation. To run the test suite, invoke tox:
+
 ```bash
-$ poetry run pytest
+$ tox
 ```
 
 You may also manually test by building a PEX with this plugin, as follows:
