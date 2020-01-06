@@ -1,28 +1,34 @@
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["flit_core>=2,<3"]
+build-backend = "flit_core.buildapi"
 
-[tool.poetry]
-name = "flake8-pantsbuild"
-version = "0.1.0"
-description = "Various Flake8 lints used by the Pants project and its users."
-authors = ["Pantsbuild developers <pantsbuild@gmail.com>"]
-license = "Apache-2.0"
+[tool.flit.metadata]
+module = "flake8_pantsbuild"
+author = "Pantsbuild developers"
+author-email = "pantsbuild@gmail.com"
+description-file = "README.md"
+classifiers = [
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: Unix",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS :: MacOS X",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 2",
+  "Programming Language :: Python :: 2.7",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.5",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+]
+requires-python = ">=2.7,<3.9,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+requires = [
+  "flake8>=3.7",
+]
 
-[tool.poetry.plugins."flake8.extension"]
+[tool.flit.entrypoints."flake8.extension"]
 PB = "flake8_pantsbuild:Plugin"
-
-[tool.poetry.dependencies]
-python = "==2.7.* || >=3.5"
-flake8 = ">=3.7"
-importlib_metadata = {version = ">=1.3.0", python = "<3.8"}
-
-[tool.poetry.dev-dependencies]
-black = {version = ">=19.10b0", python = ">=3.6"}
-isort = {extras = ["pyproject"], version = ">=4.3.21"}
-# NB: We can't use Pytest 5 or pytest-flakedir 2.* because these only support Python 3.
-pytest = ">=4.6,<4.7"
-pytest-flake8dir = ">=1.3.0,<1.4"
 
 [tool.black]
 line-length = 100

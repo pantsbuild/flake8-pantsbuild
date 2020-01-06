@@ -1,14 +1,12 @@
 # Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 # Licensed under the Apache License, Version 2.0 (see LICENSE).
 
+"""Various Flake8 lints used by the Pants projects and its users."""  # NB: Flit uses this as out distribution description.
+
 import ast
-import sys
 
-if sys.version_info >= (3, 8):
-    from importlib.metadata import version
-else:
-    from importlib_metadata import version
 
+__version__ = "0.1.0"  # NB: Flit uses this as out distribution version.
 
 PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
@@ -39,7 +37,7 @@ class Visitor(ast.NodeVisitor):
 
 class Plugin(object):
     name = "flake8-pantsbuild"
-    version = version("flake8-pantsbuild")
+    version = __version__
 
     def __init__(self, tree):
         self._tree = tree
