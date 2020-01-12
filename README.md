@@ -30,7 +30,7 @@ If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pyc
 
 | Error code | Description                            |
 |:----------:|:--------------------------------------:|
-| PNT800     | Found bad reference to class attribute |
+| PB800      | Found bad reference to class attribute |
 
 ## Migration from `pantsbuild.pants.contrib.python.checks.checker`
 

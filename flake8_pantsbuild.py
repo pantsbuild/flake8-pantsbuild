@@ -11,7 +11,8 @@ import ast
 import sys
 
 # NB: Flit uses this as our distribution version.
-__version__ = "0.1.0" if sys.version_info[0] >= 3 else b"0.1.0"
+PY2 = sys.version_info[0] < 3
+__version__ = "0.1.0" if not PY2 else b"0.1.0"
 
 
 PB800 = (
