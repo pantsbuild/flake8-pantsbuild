@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import ast
 import sys
 
-
 # NB: Flit uses this as our distribution version.
 __version__ = "0.1.0" if sys.version_info[0] >= 3 else b"0.1.0"
 

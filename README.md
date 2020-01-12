@@ -44,9 +44,10 @@ We use [tox](https://testrun.org/tox/en/latest/) for test automation. To run the
 $ tox
 ```
 
-You may run certain environments with `tox -e`:
+You may run certain environments with `tox -e` (run `tox -l` to see all options):
 
 ```bash
+$ tox -e format-run
 $ tox -e py27
 $ tox -e py36
 ```
