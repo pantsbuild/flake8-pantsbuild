@@ -4,9 +4,10 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import itertools
 from textwrap import dedent
 
-from flake8_pantsbuild import PB800
+from flake8_pantsbuild import PB800, PB804, PB805
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
@@ -32,3 +33,24 @@ def test_pb_800(flake8dir):
     assert {"./bad.py:8:29: {}".format(PB800.format(name="Example", attr="CONSTANT"))} == set(
         result.out_lines
     )
+
+
+def test_pb_804(flake8dir):
+    violating_pairs = itertools.product([None, False, True, 1, "'a'"], ["or", "and"])
+    violations = {
+        "bad{}".format(i): "x = 0\n{constant} {op} x".format(constant=pair[0], op=pair[1])
+        for i, pair in enumerate(violating_pairs)
+    }
+    flake8dir.make_py_files(good="x = y = 0\nx or y", **violations)
+    result = flake8dir.run_flake8()
+    assert {"./{}.py:2:1: {}".format(fp, PB804) for fp in violations} == set(result.out_lines)
+
+
+def test_pb_805(flake8dir):
+    violations = {
+        "bad{}".format(i): "x = 0\nx and {}".format(constant)
+        for i, constant in enumerate([None, False, True, 1, "'a'"])
+    }
+    flake8dir.make_py_files(good="x = y = 0\nx and y", **violations)
+    result = flake8dir.run_flake8()
+    assert {"./{}.py:2:7: {}".format(fp, PB805) for fp in violations} == set(result.out_lines)
