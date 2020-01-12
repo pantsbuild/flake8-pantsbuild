@@ -1,13 +1,22 @@
 language: python
-python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
-before_install:
-  - pip install poetry
 install:
-  - pip install tox-travis
-script:
-  - tox
+  - pip install tox
+jobs:
+  include:
+    - name: Format check
+      script: tox -e format-check
+    - name: Python 2.7
+      python: "2.7"
+      script: tox -e py27
+    - name: Python 3.5
+      python: "3.5"
+      script: tox -e py35
+    - name: Python 3.6
+      python: "3.6"
+      script: tox -e py36
+    - name: Python 3.7
+      python: "3.7"
+      script: tox -e py37
+    - name: Python 3.8
+      python: "3.8"
+      script: tox -e py38

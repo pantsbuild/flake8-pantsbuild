@@ -1,4 +1,6 @@
 [build-system]
+# TODO: switch to Flit once it releases a fix for https://github.com/takluyver/flit/pull/305. See
+# https://github.com/pantsbuild/flake8-pantsbuild/pull/2 for what the setup should look like.
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
@@ -13,16 +15,9 @@ license = "Apache-2.0"
 PB = "flake8_pantsbuild:Plugin"
 
 [tool.poetry.dependencies]
-python = "==2.7.* || >=3.5"
+python = ">=2.7,<3.9,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 flake8 = ">=3.7"
 importlib_metadata = {version = ">=1.3.0", python = "<3.8"}
-
-[tool.poetry.dev-dependencies]
-black = {version = ">=19.10b0", python = ">=3.6"}
-isort = {extras = ["pyproject"], version = ">=4.3.21"}
-# NB: We can't use Pytest 5 or pytest-flakedir 2.* because these only support Python 3.
-pytest = ">=4.6,<4.7"
-pytest-flake8dir = ">=1.3.0,<1.4"
 
 [tool.black]
 line-length = 100

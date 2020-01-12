@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
 # Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 # Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
 import sys
@@ -20,7 +23,7 @@ class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
 
     def __init__(self):
-        self.errors = []  # type: List[Tuple[int, int, str]]
+        self.errors = []
 
     def visit_ClassDef(self, class_node):
         for node in ast.walk(class_node):
