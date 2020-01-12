@@ -44,7 +44,7 @@ We use [tox](https://testrun.org/tox/en/latest/) for test automation. To run the
 $ tox
 ```
 
-You may run certain environments with `tox -e` (run `tox -l` to see all options):
+You may run certain environments with `tox -e` (run `tox -a` to see all options):
 
 ```bash
 $ tox -e format-run
@@ -52,7 +52,7 @@ $ tox -e py27
 $ tox -e py36
 ```
 
-You may also manually test by building a PEX with this plugin, as follows:
+You may also manually test by building a [PEX](https://github.com/pantsbuild/pex) with this plugin, as follows:
 
 ```bash
 $ pex flake8 . --entry-point flake8 --output-file flake8.pex
