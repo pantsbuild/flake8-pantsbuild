@@ -1,12 +1,19 @@
+# -*- coding: utf-8 -*-
 # Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 # Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-"""Various Flake8 lints used by the Pants projects and its users."""  # NB: Flit uses this as out distribution description.
+# NB: Flit uses this as our distribution description.
+"""Various Flake8 lints used by the Pants projects and its users."""
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
+import sys
 
 
-__version__ = "0.1.0"  # NB: Flit uses this as out distribution version.
+# NB: Flit uses this as our distribution version.
+__version__ = "0.1.0" if sys.version_info[0] >= 3 else b"0.1.0"
+
 
 PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
