@@ -24,7 +24,7 @@ class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
 
     def __init__(self):
-        self.errors = []  # type: List[Tuple[int, int, str]]
+        self.errors = []
 
     def visit_ClassDef(self, class_node):
         for node in ast.walk(class_node):

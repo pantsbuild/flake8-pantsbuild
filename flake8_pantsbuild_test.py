@@ -13,11 +13,11 @@ def test_pb_800(flake8dir):
     template = dedent(
         """\
         import os.path
-      
-      
+
+
         class Example(object):
             CONSTANT = "foo"
-      
+
             def foo(self, value):
                 return os.path.join({}.CONSTANT, value)
         """
