@@ -1,5 +1,8 @@
 *.pyc
 /dist/
+/flake8_pantsbuild.egg-info/
+
+/.tox/
 /.pytest_cache
 /.cache
 
