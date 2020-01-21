@@ -31,11 +31,11 @@ class Visitor(ast.NodeVisitor):
     def visit_BoolOp(self, bool_op_node):
         def is_constant(expr):
             if PY2:
-                is_name_constant = isinstance(expr, ast.Name) and expr.id in [
+                is_name_constant = isinstance(expr, ast.Name) and expr.id in (
                     "True",
                     "False",
                     "None",
-                ]
+                )
             else:
                 is_name_constant = isinstance(expr, ast.NameConstant)
             return isinstance(expr, (ast.Num, ast.Str)) or is_name_constant
