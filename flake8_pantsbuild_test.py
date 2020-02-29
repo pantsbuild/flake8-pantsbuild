@@ -36,28 +36,23 @@ def test_pb_800(flake8dir):
 
 
 def test_pb_802(flake8dir):
-    good = dedent(
-        """\
-        with open('test.txt'):
-            pass
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            foo = open('test.txt')
 
-        with open('test.txt') as fp:
-            fp.read()
-        """
+            with open('test.txt'):
+                pass
+
+            bar = open('test.txt')
+
+            with open('test.txt') as fp:
+                fp.read()
+            """
+        )
     )
-    bad = dedent(
-        """\
-        foo = open('test.txt')
-
-        with open('test.txt'):
-            pass
-
-        bar = open('test.txt')
-        """
-    )
-    flake8dir.make_py_files(good=good, bad=bad)
     result = flake8dir.run_flake8()
-    assert {"./bad.py:1:7: {}".format(PB802), "./bad.py:6:7: {}".format(PB802)} == set(
+    assert {"./example.py:1:7: {}".format(PB802), "./example.py:6:7: {}".format(PB802)} == set(
         result.out_lines
     )
 
