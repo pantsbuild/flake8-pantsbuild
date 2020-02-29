@@ -31,6 +31,7 @@ If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pyc
 | Error code | Description                                                  |
 |:----------:|:------------------------------------------------------------:|
 | PB800      | Found bad reference to class attribute                       |
+| PB802      | Using `open` without a `with` statement (context manager)    |
 | PB804      | Using a constant on the left-hand side of a logical operator |
 | PB805      | Using a constant on the right-hand side of an and operator   |
 

@@ -1,6 +1,7 @@
 *.pyc
 /dist/
 /flake8_pantsbuild.egg-info/
+/poetry.lock
 
 /.tox/
 /.pytest_cache

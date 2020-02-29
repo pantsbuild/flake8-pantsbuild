@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 from textwrap import dedent
 
-from flake8_pantsbuild import PB800, PB804, PB805
+from flake8_pantsbuild import PB800, PB802, PB804, PB805
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
@@ -31,6 +31,33 @@ def test_pb_800(flake8dir):
     flake8dir.make_py_files(good=template.format("self"), bad=template.format("Example"))
     result = flake8dir.run_flake8()
     assert {"./bad.py:8:29: {}".format(PB800.format(name="Example", attr="CONSTANT"))} == set(
+        result.out_lines
+    )
+
+
+def test_pb_802(flake8dir):
+    good = dedent(
+        """\
+        with open('test.txt'):
+            pass
+
+        with open('test.txt') as fp:
+            fp.read()
+        """
+    )
+    bad = dedent(
+        """\
+        foo = open('test.txt')
+
+        with open('test.txt'):
+            pass
+
+        bar = open('test.txt')
+        """
+    )
+    flake8dir.make_py_files(good=good, bad=bad)
+    result = flake8dir.run_flake8()
+    assert {"./bad.py:1:7: {}".format(PB802), "./bad.py:6:7: {}".format(PB802)} == set(
         result.out_lines
     )
 
