@@ -18,8 +18,9 @@ PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
     "classmethods, respectively."
 )
-PB804 = "PB804 using a constant on the left-hand side of a logical operator."
-PB805 = "PB805 using a constant on the right-hand side of an `and` operator."
+PB802 = "PB802 `open()` calls should be made within a `with` statement (context manager)"
+PB804 = "PB804 Using a constant on the left-hand side of a logical operator."
+PB805 = "PB805 Using a constant on the right-hand side of an `and` operator."
 
 
 class Visitor(ast.NodeVisitor):
@@ -27,6 +28,7 @@ class Visitor(ast.NodeVisitor):
 
     def __init__(self):
         self.errors = []
+        self.with_context_exprs = set()
 
     def visit_BoolOp(self, bool_op_node):
         def is_constant(expr):
@@ -61,6 +63,26 @@ class Visitor(ast.NodeVisitor):
                         PB800.format(name=class_node.name, attr=node.attr),
                     )
                 )
+
+    def visit_With(self, with_node):
+        if PY2:
+            expr = with_node.context_expr
+            with_context_exprs = {expr} if isinstance(expr, ast.Call) else set()
+        else:
+            with_context_exprs = {
+                node.context_expr
+                for node in with_node.items
+                if isinstance(node.context_expr, ast.Call)
+            }
+        self.with_context_exprs.update(with_context_exprs)
+
+    def visit_Call(self, call_node):
+        if (
+            isinstance(call_node.func, ast.Name)
+            and call_node.func.id == "open"
+            and call_node not in self.with_context_exprs
+        ):
+            self.errors.append((call_node.lineno, call_node.col_offset, PB802))
 
 
 class Plugin(object):
