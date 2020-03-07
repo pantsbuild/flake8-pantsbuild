@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ast
+import re
 import sys
 
 if sys.version_info >= (3, 8):
@@ -15,6 +16,10 @@ else:
 PY2 = sys.version_info[0] < 3
 
 PB606 = "PB606 Classes must be new-style classes, meaning they inherit `object` or another class."
+PB607 = (
+    "PB607 Print used as a statement. Please either use `from __future__ import print_function` or "
+    "rewrite to look like a function call, e.g. change `print 'hello'` to `print('hello')`."
+)
 PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
     "classmethods, respectively."
@@ -27,7 +32,10 @@ PB805 = "PB805 Using a constant on the right-hand side of an `and` operator."
 class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
 
-    def __init__(self):
+    PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
+
+    def __init__(self, lines):
+        self.lines = lines
         self.errors = []
         self.with_call_exprs = set()
 
@@ -50,6 +58,16 @@ class Visitor(ast.NodeVisitor):
     def check_for_pb606(self, class_def_node):
         if not class_def_node.bases:
             self.errors.append((class_def_node.lineno, class_def_node.col_offset, PB606))
+
+    def check_for_pb607(self, print_node):
+        # This checks for a print statement being used _like_ a print function, e.g.
+        # `print("hello")`. It is still technically a print _statement_ rather than _function_, but
+        # it behaves the same as a print function.
+        logical_line = self.lines[print_node.lineno - 1]
+        print_offset = logical_line.index("print")
+        stripped_line = logical_line[print_offset + len("print") :]
+        if not self.PRINT_FUNCTION_REGEX.match(stripped_line):
+            self.errors.append((print_node.lineno, print_node.col_offset, PB607))
 
     def check_for_pb800(self, class_def_node):
         for node in ast.walk(class_def_node):
@@ -104,6 +122,12 @@ class Visitor(ast.NodeVisitor):
         self.check_for_pb606(class_def_node)
         self.check_for_pb800(class_def_node)
 
+    def visit_Print(self, print_node):
+        # NB: When running with Python 3, this method will never be called because Print does not
+        # exist in the AST. This will also not be called when using
+        # `from __future__ import print_function` with Python 2.
+        self.check_for_pb607(print_node)
+
     def visit_With(self, with_node):
         self.collect_call_exprs_from_with_node(with_node)
 
@@ -112,11 +136,12 @@ class Plugin(object):
     name = "flake8-pantsbuild"
     version = version("flake8-pantsbuild")
 
-    def __init__(self, tree):
+    def __init__(self, tree, lines):
         self._tree = tree
+        self._lines = lines
 
     def run(self):
-        visitor = Visitor()
+        visitor = Visitor(lines=self._lines)
         visitor.visit(self._tree)
         for line, col, msg in visitor.errors:
             yield line, col, msg, type(self)

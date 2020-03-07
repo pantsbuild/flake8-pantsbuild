@@ -7,7 +7,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 from textwrap import dedent
 
-from flake8_pantsbuild import PB606, PB800, PB802, PB804, PB805
+import pytest
+
+from flake8_pantsbuild import PB606, PB607, PB800, PB802, PB804, PB805, PY2
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
@@ -41,6 +43,35 @@ def test_pb_606(flake8dir):
     )
     result = flake8dir.run_flake8()
     assert {"./example.py:4:1: {}".format(PB606), "./example.py:16:1: {}".format(PB606)} == set(
+        result.out_lines
+    )
+
+
+@pytest.mark.skipif(not PY2, reason="Print statements cause syntax errors with Python 3")
+def test_pb_607(flake8dir):
+    flake8dir.make_py_files(
+        normal=dedent(
+            """\
+            # Good
+            print("I'm a statement, but look like a function call")
+            print(0, 1, 2)
+            print (0, 1, 2)
+
+            # Bad
+            print "old school"
+            print 0
+            """
+        ),
+        future=dedent(
+            """\
+            from __future__ import print_function
+
+            print("Future-proof!")
+            """
+        ),
+    )
+    result = flake8dir.run_flake8()
+    assert {"./normal.py:7:1: {}".format(PB607), "./normal.py:8:1: {}".format(PB607)} == set(
         result.out_lines
     )
 
