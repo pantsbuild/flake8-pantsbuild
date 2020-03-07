@@ -7,12 +7,42 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import itertools
 from textwrap import dedent
 
-from flake8_pantsbuild import PB800, PB802, PB804, PB805
+from flake8_pantsbuild import PB606, PB800, PB802, PB804, PB805
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
 # can't upgrade past 1.3.0 due to needing to support Python 2. So, we convert result.out_lines to
 # a set in every test for deduplication. See https://pypi.org/project/pytest-flake8dir/.
+
+
+def test_pb_606(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            from fake import Super1, Super2
+
+
+            class OldStyle:
+                pass
+
+
+            class NewStyle(object):
+                pass
+
+
+            class Subclass(Super1, Super2):
+                pass
+
+
+            class NoMroSpecified():
+                pass
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {"./example.py:4:1: {}".format(PB606), "./example.py:16:1: {}".format(PB606)} == set(
+        result.out_lines
+    )
 
 
 def test_pb_800(flake8dir):
