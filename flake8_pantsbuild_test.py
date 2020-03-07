@@ -9,12 +9,50 @@ from textwrap import dedent
 
 import pytest
 
-from flake8_pantsbuild import PB606, PB607, PB800, PB802, PB804, PB805, PY2
+from flake8_pantsbuild import PB601, PB606, PB607, PB800, PB802, PB804, PB805, PY2
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
 # can't upgrade past 1.3.0 due to needing to support Python 2. So, we convert result.out_lines to
 # a set in every test for deduplication. See https://pypi.org/project/pytest-flake8dir/.
+
+
+@pytest.mark.skipif(not PY2, reason="Old-style exceptions cause syntax error with Python 3")
+def test_pb_601(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            try:
+                pass
+            except ValueError, e:
+                raise e
+
+            try:
+                pass
+            except (ValueError, TypeError), e:
+                raise e
+
+            try:
+                pass
+            except ValueError:
+                raise
+
+            try:
+                pass
+            except ValueError as e:
+                raise e
+
+            try:
+                pass
+            except (ValueError, TypeError) as e:
+                raise e
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {"./example.py:3:1: {}".format(PB601), "./example.py:8:1: {}".format(PB601)} == set(
+        result.out_lines
+    )
 
 
 def test_pb_606(flake8dir):

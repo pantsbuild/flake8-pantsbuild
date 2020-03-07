@@ -15,6 +15,10 @@ else:
 
 PY2 = sys.version_info[0] < 3
 
+PB601 = (
+    "PB601 Using an old-style except statement. Instead of `except ValueError, e`, use "
+    "`except ValueError as e`."
+)
 PB606 = "PB606 Classes must be new-style classes, meaning they inherit `object` or another class."
 PB607 = (
     "PB607 Print used as a statement. Please either use `from __future__ import print_function` or "
@@ -54,6 +58,14 @@ class Visitor(ast.NodeVisitor):
                 if isinstance(node.context_expr, ast.Call)
             }
         self.with_call_exprs.update(with_context_exprs)
+
+    def check_for_pb601(self, try_except_node):
+        for handler in try_except_node.handlers:
+            logical_line = self.lines[handler.lineno - 1]
+            except_offset = logical_line.index("except")
+            stripped_line = logical_line[except_offset + len("except") :]
+            if handler.name and " as " not in stripped_line:
+                self.errors.append((handler.lineno, handler.col_offset, PB601))
 
     def check_for_pb606(self, class_def_node):
         if not class_def_node.bases:
@@ -127,6 +139,11 @@ class Visitor(ast.NodeVisitor):
         # exist in the AST. This will also not be called when using
         # `from __future__ import print_function` with Python 2.
         self.check_for_pb607(print_node)
+
+    def visit_TryExcept(self, try_except_node):
+        # NB: This method will not be called with Python 3 because TryExcept and TryFinally were
+        # merged into Try.
+        self.check_for_pb601(try_except_node)
 
     def visit_With(self, with_node):
         self.collect_call_exprs_from_with_node(with_node)

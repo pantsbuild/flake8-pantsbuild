@@ -28,14 +28,15 @@ If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pyc
 
 ## Error Codes
 
-| Error code | Description                                                  |
-|:----------:|:------------------------------------------------------------:|
-| PB606      | Found Python 2 old-style classes (not inheriting `object`)   |
-| PB607      | Using print statements, rather than print functions          |
-| PB800      | Found bad reference to class attribute                       |
-| PB802      | Using `open` without a `with` statement (context manager)    |
-| PB804      | Using a constant on the left-hand side of a logical operator |
-| PB805      | Using a constant on the right-hand side of an and operator   |
+| Error code | Description                                                     |
+|:----------:|:---------------------------------------------------------------:|
+| PB601      | Using old style `except` statements instead of the `as` keyword |
+| PB606      | Found Python 2 old-style classes (not inheriting `object`)      |
+| PB607      | Using print statements, rather than print functions             |
+| PB800      | Found bad reference to class attribute                          |
+| PB802      | Using `open` without a `with` statement (context manager)       |
+| PB804      | Using a constant on the left-hand side of a logical operator    |
+| PB805      | Using a constant on the right-hand side of an and operator      |
 
 ## Migration from `pantsbuild.pants.contrib.python.checks.checker`
 
