@@ -14,6 +14,7 @@ else:
 
 PY2 = sys.version_info[0] < 3
 
+PB606 = "PB606 Classes must be new-style classes, meaning they inherit `object` or another class."
 PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
     "classmethods, respectively."
@@ -45,6 +46,10 @@ class Visitor(ast.NodeVisitor):
                 if isinstance(node.context_expr, ast.Call)
             }
         self.with_call_exprs.update(with_context_exprs)
+
+    def check_for_pb606(self, class_def_node):
+        if not class_def_node.bases:
+            self.errors.append((class_def_node.lineno, class_def_node.col_offset, PB606))
 
     def check_for_pb800(self, class_def_node):
         for node in ast.walk(class_def_node):
@@ -96,6 +101,7 @@ class Visitor(ast.NodeVisitor):
         self.check_for_pb802(call_node)
 
     def visit_ClassDef(self, class_def_node):
+        self.check_for_pb606(class_def_node)
         self.check_for_pb800(class_def_node)
 
     def visit_With(self, with_node):
