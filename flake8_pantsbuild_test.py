@@ -9,7 +9,7 @@ from textwrap import dedent
 
 import pytest
 
-from flake8_pantsbuild import PB601, PB606, PB607, PB800, PB802, PB804, PB805, PY2
+from flake8_pantsbuild import PB601, PB605, PB606, PB607, PB800, PB802, PB804, PB805, PY2
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
@@ -53,6 +53,32 @@ def test_pb_601(flake8dir):
     assert {"./example.py:3:1: {}".format(PB601), "./example.py:8:1: {}".format(PB601)} == set(
         result.out_lines
     )
+
+
+def test_pb_605(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            from fake import SingletonMetaclass
+            from six import add_metaclass, with_metaclass
+
+
+            class Singleton(object):
+                __metaclass__ = SingletonMetaclass
+
+
+            @add_metaclass(SingletonMetaclass)
+            class SafeSingleton(object):
+                pass
+
+
+            class SafeSingleton2(with_metaclass(object, SingletonMetaclass)):
+                pass
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {"./example.py:6:5: {}".format(PB605)} == set(result.out_lines)
 
 
 def test_pb_606(flake8dir):

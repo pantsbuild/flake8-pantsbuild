@@ -31,6 +31,7 @@ If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pyc
 | Error code | Description                                                     |
 |:----------:|:---------------------------------------------------------------:|
 | PB601      | Using old style `except` statements instead of the `as` keyword |
+| PB605      | Using metaclasses incompatible with Python 3                    |
 | PB606      | Found Python 2 old-style classes (not inheriting `object`)      |
 | PB607      | Using print statements, rather than print functions             |
 | PB800      | Found bad reference to class attribute                          |
