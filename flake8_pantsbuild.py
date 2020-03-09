@@ -19,6 +19,12 @@ PB601 = (
     "PB601 Using an old-style except statement. Instead of `except ValueError, e`, use "
     "`except ValueError as e`."
 )
+PB605 = (
+    "PB605 Using the old style of declaring metaclasses, which won't work properly with Python 3. "
+    "If you need to support both Python 2 and Python 3, use either `with_metaclass` or "
+    "`add_metaclass` from `six` or `future`. If you don't care about Python 2 support, use "
+    "`class Example(metaclass=MyMetaclass)`."
+)
 PB606 = "PB606 Classes must be new-style classes, meaning they inherit `object` or another class."
 PB607 = (
     "PB607 Print used as a statement. Please either use `from __future__ import print_function` or "
@@ -66,6 +72,16 @@ class Visitor(ast.NodeVisitor):
             stripped_line = logical_line[except_offset + len("except") :]
             if handler.name and " as " not in stripped_line:
                 self.errors.append((handler.lineno, handler.col_offset, PB601))
+
+    def check_for_pb605(self, class_def_node):
+        for node in class_def_node.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            for name in node.targets:
+                if not isinstance(name, ast.Name):
+                    continue
+                if name.id == "__metaclass__":
+                    self.errors.append((name.lineno, name.col_offset, PB605))
 
     def check_for_pb606(self, class_def_node):
         if not class_def_node.bases:
@@ -131,6 +147,7 @@ class Visitor(ast.NodeVisitor):
         self.check_for_pb802(call_node)
 
     def visit_ClassDef(self, class_def_node):
+        self.check_for_pb605(class_def_node)
         self.check_for_pb606(class_def_node)
         self.check_for_pb800(class_def_node)
 
