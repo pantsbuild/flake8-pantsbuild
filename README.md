@@ -30,19 +30,21 @@ If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/
 
 | Error code | Description                                                     | Notes                |
 |:----------:|:---------------------------------------------------------------:|:--------------------:|
-| PB601      | Using old style `except` statements instead of the `as` keyword | Disabled by default¹ |
-| PB602      | Using `iteritems`, `iterkeys`, or `itervalues`                  | Disabled by default¹ |
-| PB603      | Using `xrange`                                                  | Disabled by default¹ |
-| PB604      | Using `basestring` or `unicode`                                 | Disabled by default¹ |
-| PB605      | Using metaclasses incompatible with Python 3                    | Disabled by default¹ |
-| PB606      | Found Python 2 old-style classes (not inheriting `object`)      | Disabled by default¹ |
-| PB607      | Using print statements, rather than print functions             | Disabled by default¹ |
+| PB100      | Check for 2-space indentation                                   | Disabled by default¹ |
+| PB601      | Using old style `except` statements instead of the `as` keyword | Disabled by default² |
+| PB602      | Using `iteritems`, `iterkeys`, or `itervalues`                  | Disabled by default² |
+| PB603      | Using `xrange`                                                  | Disabled by default² |
+| PB604      | Using `basestring` or `unicode`                                 | Disabled by default² |
+| PB605      | Using metaclasses incompatible with Python 3                    | Disabled by default² |
+| PB606      | Found Python 2 old-style classes (not inheriting `object`)      | Disabled by default² |
+| PB607      | Using print statements, rather than print functions             | Disabled by default² |
 | PB800      | Used class attribute that breaks inheritance                    |                      |
 | PB802      | Using `open` without a `with` statement (context manager)       |                      |
 | PB804      | Using a constant on the left-hand side of a logical operator    |                      |
 | PB805      | Using a constant on the right-hand side of an and operator      |                      |
 
-¹ To enable the `PB6*` checks for Python 2->3 lints, set `--enable-extensions PB6`. 
+¹ To enable the `PB100` indentation lint, set `--enable-extensions PB100`. You'll need to disable `E111` (check for 4-space indentation) via `--extend-ignore=E111`. You'll likely want to disable `E121`, `E124`, `E125`, `E127`, and `E128` as well.
+² To enable the `PB6*` checks for Python 2->3 lints, set `--enable-extensions PB6`. 
 
 ## Migration from `pantsbuild.pants.contrib.python.checks.checker`
 

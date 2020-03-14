@@ -11,6 +11,7 @@ license = "Apache-2.0"
 
 [tool.poetry.plugins."flake8.extension"]
 PB8 = "flake8_pantsbuild:Plugin"
+PB100 = "flake8_pantsbuild:IndentationPlugin"
 PB6 = "flake8_pantsbuild:SixPlugin"
 
 [tool.poetry.dependencies]
