@@ -62,7 +62,7 @@ def test_pb_601(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {"./example.py:3:1: {}".format(PB601), "./example.py:8:1: {}".format(PB601)} == set(
         result.out_lines
     )
@@ -96,7 +96,7 @@ def test_pb_602(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {
         "./example.py:7:1: {}".format(PB602.format(bad_attr="iteritems", good_attr="items")),
         "./example.py:8:1: {}".format(PB602.format(bad_attr="iterkeys", good_attr="keys")),
@@ -123,7 +123,7 @@ def test_pb_603(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {"./example.py:4:1: {}".format(PB603)} == set(result.out_lines)
 
 
@@ -137,7 +137,7 @@ def test_pb_604(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {
         "./example.py:1:26: {}".format(
             PB604.format(bad_name="unicode", six_replacement="text_type")
@@ -170,7 +170,7 @@ def test_pb_605(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {"./example.py:6:5: {}".format(PB605)} == set(result.out_lines)
 
 
@@ -198,7 +198,7 @@ def test_pb_606(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {"./example.py:4:1: {}".format(PB606), "./example.py:16:1: {}".format(PB606)} == set(
         result.out_lines
     )
@@ -227,7 +227,7 @@ def test_pb_607(flake8dir):
             """
         ),
     )
-    result = flake8dir.run_flake8()
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB6"])
     assert {"./normal.py:7:1: {}".format(PB607), "./normal.py:8:1: {}".format(PB607)} == set(
         result.out_lines
     )
