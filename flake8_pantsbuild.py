@@ -19,6 +19,12 @@ PB601 = (
     "PB601 Using an old-style except statement. Instead of `except ValueError, e`, use "
     "`except ValueError as e`."
 )
+PB602 = (
+    "PB602 `{bad_attr}()` is removed in Python 3. Instead, use `{good_attr}()` or use "
+    "`six.{bad_attr}()`."
+)
+PB603 = "PB603 `xrange()` is removed in Python 3. Instead, use `range()` or use `six.range()`."
+PB604 = "PB604 {bad_name} is removed in Python 3. Instead, use `six.{six_replacement}`."
 PB605 = (
     "PB605 Using the old style of declaring metaclasses, which won't work properly with Python 3. "
     "If you need to support both Python 2 and Python 3, use either `with_metaclass` or "
@@ -72,6 +78,36 @@ class Visitor(ast.NodeVisitor):
             stripped_line = logical_line[except_offset + len("except") :]
             if handler.name and " as " not in stripped_line:
                 self.errors.append((handler.lineno, handler.col_offset, PB601))
+
+    def check_for_pb602_and_603(self, call_node):
+        dict_iterators = {"iteritems": "items", "iterkeys": "keys", "itervalues": "values"}
+        if isinstance(call_node.func, ast.Attribute):
+            # Not a perfect solution since a user could have a dictionary named six or something
+            # similar. However, this should catch most cases where people are using iter* without
+            # six.
+            attr = call_node.func.attr
+            if attr in dict_iterators and getattr(call_node.func.value, "id") != "six":
+                self.errors.append(
+                    (
+                        call_node.lineno,
+                        call_node.col_offset,
+                        PB602.format(bad_attr=attr, good_attr=dict_iterators[attr]),
+                    )
+                )
+        if isinstance(call_node.func, ast.Name) and call_node.func.id == "xrange":
+            self.errors.append((call_node.lineno, call_node.col_offset, PB603))
+
+    def check_for_pb604(self, name_node):
+        bad_names = {"basestring": "string_types", "unicode": "text_type"}
+        name = name_node.id
+        if name in bad_names:
+            self.errors.append(
+                (
+                    name_node.lineno,
+                    name_node.col_offset,
+                    PB604.format(bad_name=name, six_replacement=bad_names[name]),
+                )
+            )
 
     def check_for_pb605(self, class_def_node):
         for node in class_def_node.body:
@@ -142,28 +178,39 @@ class Visitor(ast.NodeVisitor):
 
     def visit_BoolOp(self, bool_op_node):
         self.check_for_pb804_and_pb805(bool_op_node)
+        self.generic_visit(bool_op_node)
 
     def visit_Call(self, call_node):
+        self.check_for_pb602_and_603(call_node)
         self.check_for_pb802(call_node)
+        self.generic_visit(call_node)
 
     def visit_ClassDef(self, class_def_node):
         self.check_for_pb605(class_def_node)
         self.check_for_pb606(class_def_node)
         self.check_for_pb800(class_def_node)
+        self.generic_visit(class_def_node)
+
+    def visit_Name(self, name_node):
+        self.check_for_pb604(name_node)
+        self.generic_visit(name_node)
 
     def visit_Print(self, print_node):
         # NB: When running with Python 3, this method will never be called because Print does not
         # exist in the AST. This will also not be called when using
         # `from __future__ import print_function` with Python 2.
         self.check_for_pb607(print_node)
+        self.generic_visit(print_node)
 
     def visit_TryExcept(self, try_except_node):
         # NB: This method will not be called with Python 3 because TryExcept and TryFinally were
         # merged into Try.
         self.check_for_pb601(try_except_node)
+        self.generic_visit(try_except_node)
 
     def visit_With(self, with_node):
         self.collect_call_exprs_from_with_node(with_node)
+        self.generic_visit(with_node)
 
 
 class Plugin(object):

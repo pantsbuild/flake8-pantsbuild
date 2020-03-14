@@ -9,7 +9,20 @@ from textwrap import dedent
 
 import pytest
 
-from flake8_pantsbuild import PB601, PB605, PB606, PB607, PB800, PB802, PB804, PB805, PY2
+from flake8_pantsbuild import (
+    PB601,
+    PB602,
+    PB603,
+    PB604,
+    PB605,
+    PB606,
+    PB607,
+    PB800,
+    PB802,
+    PB804,
+    PB805,
+    PY2,
+)
 
 # NB: `pytest-flake8dir` has a known issue that it runs our plugin twice for every test. This means
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
@@ -53,6 +66,86 @@ def test_pb_601(flake8dir):
     assert {"./example.py:3:1: {}".format(PB601), "./example.py:8:1: {}".format(PB601)} == set(
         result.out_lines
     )
+
+
+def test_pb_602(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            import six
+            from six import iteritems
+
+            d1 = {"hello": 0}
+
+            # Bad
+            d1.iteritems()
+            d1.iterkeys()
+            d1.itervalues()
+
+            # Good
+            d1.items()
+            d1.keys()
+            d1.values()
+            six.iteritems()
+            iteritems(d1)
+
+            # We don't actually check that it's a dictionary. We only
+            # check for the method name.
+            o = object()
+            o.iteritems()
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {
+        "./example.py:7:1: {}".format(PB602.format(bad_attr="iteritems", good_attr="items")),
+        "./example.py:8:1: {}".format(PB602.format(bad_attr="iterkeys", good_attr="keys")),
+        "./example.py:9:1: {}".format(PB602.format(bad_attr="itervalues", good_attr="values")),
+        "./example.py:21:1: {}".format(PB602.format(bad_attr="iteritems", good_attr="items")),
+    } == set(result.out_lines)
+
+
+@pytest.mark.skipif(not PY2, reason="`xrange()` does not exist in Python 3`")
+def test_pb_603(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            import six
+
+            # Bad
+            xrange(10)
+
+            # Good
+            range(10)
+            six.range()
+            o = object()
+            o.xrange()
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {"./example.py:4:1: {}".format(PB603)} == set(result.out_lines)
+
+
+@pytest.mark.skipif(not PY2, reason="`basestring` and `unicode` do not exist in Python 3`")
+def test_pb_604(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            assert isinstance("txt", unicode)
+            assert isinstance("txt", basestring)
+            """
+        )
+    )
+    result = flake8dir.run_flake8()
+    assert {
+        "./example.py:1:26: {}".format(
+            PB604.format(bad_name="unicode", six_replacement="text_type")
+        ),
+        "./example.py:2:26: {}".format(
+            PB604.format(bad_name="basestring", six_replacement="string_types")
+        ),
+    } == set(result.out_lines)
 
 
 def test_pb_605(flake8dir):
