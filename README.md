@@ -31,7 +31,7 @@ If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/
 | Error code | Description                                                     | Notes                |
 |:----------:|:---------------------------------------------------------------:|:--------------------:|
 | PB100      | Check for 2-space indentation                                   | Disabled by default¹ |
-| PB201      | Check for trailing slashes (`\`)                                | Disabled by default² |
+| PB201      | Using slashes instead of parentheses for line continuation      | Disabled by default² |
 | PB601      | Using old style `except` statements instead of the `as` keyword | Disabled by default³ |
 | PB602      | Using `iteritems`, `iterkeys`, or `itervalues`                  | Disabled by default³ |
 | PB603      | Using `xrange`                                                  | Disabled by default³ |

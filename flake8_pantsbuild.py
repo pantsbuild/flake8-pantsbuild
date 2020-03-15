@@ -19,7 +19,7 @@ PY2 = sys.version_info[0] < 3
 
 PB100 = "PB100 Indentation of {} instead of 2."
 PB201 = (
-    "PB201 Line has trailing slashes (`\\`). Instead, use parentheses to wrap the line. Refer "
+    "PB201 Using a trailing slash (`\\`) instead of parentheses for line continuation. Refer "
     "to https://www.tutorialspoint.com/How-to-wrap-long-lines-in-Python."
 )
 PB601 = (
