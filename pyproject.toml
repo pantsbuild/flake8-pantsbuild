@@ -20,16 +20,15 @@ classifiers = [
 PB1 = "flake8_pantsbuild:Plugin"
 PB2 = "flake8_pantsbuild:IndentationPlugin"
 PB3 = "flake8_pantsbuild:TrailingSlashesPlugin"
-PB6 = "flake8_pantsbuild:SixPlugin"
 
 [tool.poetry.dependencies]
-python = ">=2.7,<3.9,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
+python = ">=3.6"
 flake8 = ">=3.7"
 importlib_metadata = {version = ">=1.3.0", python = "<3.8"}
 
 [tool.black]
 line-length = 100
-target-version = ['py27']
+target-version = ['py36']
 
 [tool.isort]
 multi_line_output = 3
