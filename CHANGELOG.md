@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0 (03/15/2020)
+
+* Prepare 2.0.0 ([#22](https://github.com/pantsbuild/flake8-pantsbuild/pull/22))
+* Add type hints and MyPy ([#21](https://github.com/pantsbuild/flake8-pantsbuild/pull/21))
+* Drop support for Python 2 and 3.5 ([#20](https://github.com/pantsbuild/flake8-pantsbuild/pull/20))
+
 ## 1.0.0 (03/15/2020)
 
 * Prepare 1.0.0 ([#19](https://github.com/pantsbuild/flake8-pantsbuild/pull/19))

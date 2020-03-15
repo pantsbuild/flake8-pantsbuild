@@ -1,9 +1,8 @@
 # Release Process
 
-
 ## Prerequisites
 
-* Install [`Poetry`](https://python-poetry.org/docs/)
+* Install [`Poetry`](https://python-poetry.org/docs/).
 * Set up PGP and PyPI. See https://www.pantsbuild.org/release.html#0-prerequisites.
 
 ## Preparation
