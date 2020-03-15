@@ -9,7 +9,7 @@ description = "Various Flake8 lints used by the Pants project and its users."
 authors = ["Pantsbuild developers <pantsbuild@gmail.com>"]
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://pants.readme.io/docs"
+homepage = "https://pants.readme.io/docs/python-linters-and-formatters"
 repository = "https://github.com/pantsbuild/flake8-pantsbuild"
 classifiers = [
   "Intended Audience :: Developers",
