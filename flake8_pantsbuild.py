@@ -67,12 +67,19 @@ class Visitor(ast.NodeVisitor):
 
     PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
 
-    def __init__(self, lines, tokens):
+    def __init__(self, lines, tokens, options):
         self.lines = lines
         self.errors = []
         self.with_call_exprs = set()
-        self.check_for_pb100(tokens)
-        self.check_for_pb201(lines=lines, tokens=tokens)
+
+        def plugin_enabled(codes):
+            return any(code in options.enable_extensions for code in codes)
+
+        self.six_plugin_enabled = plugin_enabled(["PB6", "PB60"])
+        if plugin_enabled(["PB1", "PB10", "PB100"]):
+            self.check_for_pb100(tokens)
+        if plugin_enabled(["PB2", "PB20", "PB201"]):
+            self.check_for_pb201(lines=lines, tokens=tokens)
 
     def collect_call_exprs_from_with_node(self, with_node):
         """Save any functions within a `with` statement to `self.with_call_exprs`.
@@ -251,31 +258,31 @@ class Visitor(ast.NodeVisitor):
         self.generic_visit(bool_op_node)
 
     def visit_Call(self, call_node):
-        self.check_for_pb602_and_603(call_node)
+        if self.six_plugin_enabled:
+            self.check_for_pb602_and_603(call_node)
         self.check_for_pb802(call_node)
         self.generic_visit(call_node)
 
     def visit_ClassDef(self, class_def_node):
-        self.check_for_pb605(class_def_node)
-        self.check_for_pb606(class_def_node)
+        if self.six_plugin_enabled:
+            self.check_for_pb605(class_def_node)
+            self.check_for_pb606(class_def_node)
         self.check_for_pb800(class_def_node)
         self.generic_visit(class_def_node)
 
     def visit_Name(self, name_node):
-        self.check_for_pb604(name_node)
+        if self.six_plugin_enabled:
+            self.check_for_pb604(name_node)
         self.generic_visit(name_node)
 
     def visit_Print(self, print_node):
-        # NB: When running with Python 3, this method will never be called because Print does not
-        # exist in the AST. This will also not be called when using
-        # `from __future__ import print_function` with Python 2.
-        self.check_for_pb607(print_node)
+        if self.six_plugin_enabled:
+            self.check_for_pb607(print_node)
         self.generic_visit(print_node)
 
     def visit_TryExcept(self, try_except_node):
-        # NB: This method will not be called with Python 3 because TryExcept and TryFinally were
-        # merged into Try.
-        self.check_for_pb601(try_except_node)
+        if self.six_plugin_enabled:
+            self.check_for_pb601(try_except_node)
         self.generic_visit(try_except_node)
 
     def visit_With(self, with_node):
@@ -287,13 +294,14 @@ class Plugin(object):
     name = "flake8-pantsbuild"
     version = version("flake8-pantsbuild")
 
-    def __init__(self, tree, lines, file_tokens):
+    def __init__(self, tree, lines, file_tokens, options):
         self._tree = tree
         self._lines = lines
         self._tokens = file_tokens
+        self._options = options
 
     def run(self):
-        visitor = Visitor(lines=self._lines, tokens=self._tokens)
+        visitor = Visitor(lines=self._lines, tokens=self._tokens, options=self._options)
         visitor.visit(self._tree)
         for line, col, msg in visitor.errors:
             yield line, col, msg, type(self)
