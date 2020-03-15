@@ -15,6 +15,9 @@ if sys.version_info >= (3, 8):
 else:
     from importlib_metadata import version
 
+PLUGIN_NAME = "flake8_pantsbuild"
+PLUGIN_VERSION = version(PLUGIN_NAME)
+
 PY2 = sys.version_info[0] < 3
 
 PB10 = (
@@ -68,21 +71,9 @@ PB60 = (
 class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
 
-    PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
-
-    def __init__(self, lines, tokens, options):
-        self.lines = lines
+    def __init__(self):
         self.errors = []
         self.with_call_exprs = set()
-
-        def plugin_enabled(codes):
-            return any(code in options.enable_extensions for code in codes)
-
-        self.six_plugin_enabled = plugin_enabled(["PB6"])
-        if plugin_enabled(["PB2", "PB20"]):
-            self.check_for_pb20(tokens)
-        if plugin_enabled(["PB3", "PB30"]):
-            self.check_for_pb30(lines=lines, tokens=tokens)
 
     def collect_call_exprs_from_with_node(self, with_node):
         """Save any functions within a `with` statement to `self.with_call_exprs`.
@@ -143,6 +134,71 @@ class Visitor(ast.NodeVisitor):
         ):
             self.errors.append((call_node.lineno, call_node.col_offset, PB13))
 
+    def visit_BoolOp(self, bool_op_node):
+        self.check_for_pb11_and_pb12(bool_op_node)
+        self.generic_visit(bool_op_node)
+
+    def visit_Call(self, call_node):
+        self.check_for_pb13(call_node)
+        self.generic_visit(call_node)
+
+    def visit_ClassDef(self, class_def_node):
+        self.check_for_pb10(class_def_node)
+        self.generic_visit(class_def_node)
+
+    def visit_With(self, with_node):
+        self.collect_call_exprs_from_with_node(with_node)
+        self.generic_visit(with_node)
+
+
+class Plugin(object):
+    name = PLUGIN_NAME
+    version = PLUGIN_VERSION
+
+    def __init__(self, tree):
+        self._tree = tree
+
+    def run(self):
+        visitor = Visitor()
+        visitor.visit(self._tree)
+        for line, col, msg in visitor.errors:
+            yield line, col, msg, type(self)
+
+
+class OptionalPlugin(object):
+    """A plugin that's disabled by default."""
+
+    name = PLUGIN_NAME
+    version = PLUGIN_VERSION
+    off_by_default = True
+    codes = []
+
+    @classmethod
+    def is_enabled(cls, options):
+        return any(code in options.enable_extensions for code in cls.codes)
+
+
+class IndentationPlugin(OptionalPlugin):
+    """Lint for 2-space indentation.
+
+    This is disabled by default because it conflicts with Flake8's default settings of 4-space
+    indentation.
+    """
+
+    codes = ["PB2", "PB20"]
+
+    def __init__(self, tree, file_tokens, options):
+        self._tokens = file_tokens
+        self._options = options
+        self.errors = []
+
+    def run(self):
+        if not self.is_enabled(self._options):
+            return
+        self.check_for_pb20(self._tokens)
+        for line, col, msg in self.errors:
+            yield line, col, msg, type(self)
+
     def check_for_pb20(self, tokens):
         indents = []
         for token in tokens:
@@ -158,6 +214,29 @@ class Visitor(ast.NodeVisitor):
                     self.errors.append(
                         (lineno, col_offset, PB20.format(current_indent - last_indent))
                     )
+
+
+class TrailingSlashesPlugin(OptionalPlugin):
+    """Check for trailing slashes.
+
+    Flake8 does not automatically check for trailing slashes, but this is a subjective style
+    preference so should be disabled by default.
+    """
+
+    codes = ["PB3", "PB30"]
+
+    def __init__(self, tree, lines, file_tokens, options):
+        self._lines = lines
+        self._tokens = file_tokens
+        self._options = options
+        self.errors = []
+
+    def run(self):
+        if not self.is_enabled(self._options):
+            return
+        self.check_for_pb30(self._lines, self._tokens)
+        for line, col, msg in self.errors:
+            yield line, col, msg, type(self)
 
     def check_for_pb30(self, lines, tokens):
         lines = [line.rstrip("\n") for line in lines]
@@ -193,6 +272,15 @@ class Visitor(ast.NodeVisitor):
             col_offset = len(stripped_line) - 1
             if stripped_line.endswith("\\") and not has_exception(line_number, col_offset):
                 self.errors.append((line_number, col_offset, PB30))
+
+
+class SixVisitor(ast.NodeVisitor):
+
+    PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
+
+    def __init__(self, lines):
+        self.lines = lines
+        self.errors = []
 
     def check_for_pb60(self, print_node):
         # This checks for a print statement being used _like_ a print function, e.g.
@@ -256,81 +344,42 @@ class Visitor(ast.NodeVisitor):
         if not class_def_node.bases:
             self.errors.append((class_def_node.lineno, class_def_node.col_offset, PB66))
 
-    def visit_BoolOp(self, bool_op_node):
-        self.check_for_pb11_and_pb12(bool_op_node)
-        self.generic_visit(bool_op_node)
-
     def visit_Call(self, call_node):
-        if self.six_plugin_enabled:
-            self.check_for_pb62_and_63(call_node)
-        self.check_for_pb13(call_node)
+        self.check_for_pb62_and_63(call_node)
         self.generic_visit(call_node)
 
     def visit_ClassDef(self, class_def_node):
-        if self.six_plugin_enabled:
-            self.check_for_pb65(class_def_node)
-            self.check_for_pb66(class_def_node)
-        self.check_for_pb10(class_def_node)
+        self.check_for_pb65(class_def_node)
+        self.check_for_pb66(class_def_node)
         self.generic_visit(class_def_node)
 
     def visit_Name(self, name_node):
-        if self.six_plugin_enabled:
-            self.check_for_pb64(name_node)
+        self.check_for_pb64(name_node)
         self.generic_visit(name_node)
 
     def visit_Print(self, print_node):
-        if self.six_plugin_enabled:
-            self.check_for_pb60(print_node)
+        self.check_for_pb60(print_node)
         self.generic_visit(print_node)
 
     def visit_TryExcept(self, try_except_node):
-        if self.six_plugin_enabled:
-            self.check_for_pb61(try_except_node)
+        self.check_for_pb61(try_except_node)
         self.generic_visit(try_except_node)
 
-    def visit_With(self, with_node):
-        self.collect_call_exprs_from_with_node(with_node)
-        self.generic_visit(with_node)
 
+class SixPlugin(OptionalPlugin):
+    """Several lints to help with Python 2->3 migrations."""
 
-class Plugin(object):
-    name = "flake8-pantsbuild"
-    version = version("flake8-pantsbuild")
+    codes = ["PB6"]
 
-    def __init__(self, tree, lines, file_tokens, options):
+    def __init__(self, tree, lines, options):
         self._tree = tree
         self._lines = lines
-        self._tokens = file_tokens
         self._options = options
 
     def run(self):
-        visitor = Visitor(lines=self._lines, tokens=self._tokens, options=self._options)
+        if not self.is_enabled(self._options):
+            return
+        visitor = SixVisitor(lines=self._lines)
         visitor.visit(self._tree)
         for line, col, msg in visitor.errors:
             yield line, col, msg, type(self)
-
-
-class IndentationPlugin(Plugin):
-    """Lint for 2-space indentation.
-
-    This is disabled by default because it conflicts with Flake8's default settings of 4-space
-    indentation.
-    """
-
-    off_by_default = True
-
-
-class TrailingSlashesPlugin(Plugin):
-    """Check for trailing slashes.
-
-    Flake8 does not automatically check for trailing slashes, but this is a subjective style
-    preference so should be disabled by default.
-    """
-
-    off_by_default = True
-
-
-class SixPlugin(Plugin):
-    """Several lints to help with Python 2->3 migrations."""
-
-    off_by_default = True
