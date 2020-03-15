@@ -11,6 +11,7 @@ This Flake8 plugin provides several custom lints used by the Pants project and i
 * [Migrating from `lint.pythonstyle` to `flake8`](#migrating-from-lintpythonstyle-to-flake8)
     * [Differences between the tools](#differences-between-the-tools)
     * [Steps to migrate](#steps-to-migrate)
+    * [Alternatives to custom lints](#alternatives-to-custom-lints)
 * [Development](#development)
 
 ## Installation
@@ -73,7 +74,7 @@ If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/
 
 Pants' `lint.pythonstyle` task runs `pycodestyle` and `pyflakes`, in addition to providing several custom lints. 
 
-In contrast, Flake8 runs `pycodestyle` and `pyflakes`, but it also uses `mccabe` to check for complex sections of code and it [adds its own lints](https://flake8.pycqa.org/en/latest/user/error-codes.html). Flake8 does not have any of the custom `lint.pythonstyle` lints by default, but the below guide shows how to keep any of these lints you'd like.
+In contrast, Flake8 runs `pycodestyle` and `pyflakes`, but it also uses `mccabe` to check for complex sections of code and it [adds its own lints](https://flake8.pycqa.org/en/latest/user/error-codes.html). Flake8 does not have any of the custom `lint.pythonstyle` lints by default, but the [below table](#alternatives-to-custom-lints) shows how to keep any of these lints you'd like.
 
 Flake8 has hundreds of plugins that you may easily add to Pants. See [Awesome Flake8 Extensions](https://github.com/DmytroLitvinov/awesome-flake8-extensions) for a curated list of plugins.
 
@@ -101,6 +102,8 @@ extra_requirements.add = [
   # and so on...
 ]
 ```
+
+### Alternatives to custom lints
 
 | Old code | Old option scope            | Description                                                     | Alternative                               |
 |:--------:|:---------------------------:|:---------------------------------------------------------------:|:-----------------------------------------:|
