@@ -7,7 +7,7 @@ from textwrap import dedent
 from flake8_pantsbuild import PB10, PB11, PB12, PB13, PB20, PB30
 
 
-def test_pb_10(flake8dir):
+def test_pb_10(flake8dir) -> None:
     template = dedent(
         """\
         import os.path
@@ -25,7 +25,7 @@ def test_pb_10(flake8dir):
     assert [f"./bad.py:8:29: {PB10.format(name='Example', attr='CONSTANT')}"] == result.out_lines
 
 
-def test_pb_11(flake8dir):
+def test_pb_11(flake8dir) -> None:
     violating_pairs = itertools.product([None, False, True, 1, "'a'"], ["or", "and"])
     violations = {
         f"bad{i}": f"x = 0\n{pair[0]} {pair[1]} x" for i, pair in enumerate(violating_pairs)
@@ -35,7 +35,7 @@ def test_pb_11(flake8dir):
     assert sorted(f"./{fp}.py:2:1: {PB11}" for fp in violations) == sorted(result.out_lines)
 
 
-def test_pb_12(flake8dir):
+def test_pb_12(flake8dir) -> None:
     violations = {
         f"bad{i}": f"x = 0\nx and {constant}"
         for i, constant in enumerate([None, False, True, 1, "'a'"])
@@ -45,7 +45,7 @@ def test_pb_12(flake8dir):
     assert sorted(f"./{fp}.py:2:7: {PB12}" for fp in violations) == sorted(result.out_lines)
 
 
-def test_pb_13(flake8dir):
+def test_pb_13(flake8dir) -> None:
     flake8dir.make_example_py(
         dedent(
             """\
@@ -65,7 +65,7 @@ def test_pb_13(flake8dir):
     assert [f"./example.py:1:7: {PB13}", f"./example.py:6:7: {PB13}"] == result.out_lines
 
 
-def test_pb_20(flake8dir):
+def test_pb_20(flake8dir) -> None:
     flake8dir.make_example_py(
         dedent(
             """\
@@ -98,7 +98,7 @@ def test_pb_20(flake8dir):
     ] == result.out_lines
 
 
-def test_pb_30(flake8dir):
+def test_pb_30(flake8dir) -> None:
     flake8dir.make_example_py(
         dedent(
             """\
