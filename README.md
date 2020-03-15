@@ -79,7 +79,7 @@ Flake8 has hundreds of plugins that you may easily add to Pants. See [Awesome Fl
 
 ### Steps to migrate
 
-First, follow the [installation instructions](#installation) to hook up Flake8 with Pants. Then, disable `lint.pythonstyle` by adding this by removing `pants.contrib.python.checks` from your `pants.toml`.
+First, follow the [installation instructions](#installation) to hook up Flake8 with Pants. Then, disable `lint.pythonstyle` by removing `pants.contrib.python.checks` from your `pants.toml`.
 
 Then, run Flake8 by running `./pants lint file.py` (see [Usage](#usage)).
 
