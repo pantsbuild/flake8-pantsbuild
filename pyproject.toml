@@ -4,10 +4,17 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 name = "flake8-pantsbuild"
-version = "1.0.0rc0"
+version = "1.0.0"
 description = "Various Flake8 lints used by the Pants project and its users."
 authors = ["Pantsbuild developers <pantsbuild@gmail.com>"]
 license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://pants.readme.io/docs"
+repository = "https://github.com/pantsbuild/flake8-pantsbuild"
+classifiers = [
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+]
 
 [tool.poetry.plugins."flake8.extension"]
 PB1 = "flake8_pantsbuild:Plugin"

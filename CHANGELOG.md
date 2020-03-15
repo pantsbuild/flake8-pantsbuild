@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0 (03/15/2020)
+
+* Prepare 1.0.0 ([#19](https://github.com/pantsbuild/flake8-pantsbuild/pull/19))
+* Fix error messages getting printed 4 times ([#18](https://github.com/pantsbuild/flake8-pantsbuild/pull/18))
+
 ## 1.0.0rc0 (03/15/2020)
 
 * Setup changelog and prepare 1.0.0rc0 ([#17](https://github.com/pantsbuild/flake8-pantsbuild/pull/17))
