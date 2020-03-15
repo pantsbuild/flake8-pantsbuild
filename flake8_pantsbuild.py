@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
 # Copyright 2020 Pants project contributors (see CONTRIBUTORS.md).
 # Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import ast
-import re
 import sys
 import tokenize
 from collections import defaultdict
@@ -17,8 +13,6 @@ else:
 
 PLUGIN_NAME = "flake8_pantsbuild"
 PLUGIN_VERSION = version(PLUGIN_NAME)
-
-PY2 = sys.version_info[0] < 3
 
 PB10 = (
     "PB10 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
@@ -45,28 +39,6 @@ PB30 = (
     "to https://www.tutorialspoint.com/How-to-wrap-long-lines-in-Python."
 )
 
-PB61 = (
-    "PB61 Using an old-style except statement. Instead of `except ValueError, e`, use "
-    "`except ValueError as e`."
-)
-PB62 = (
-    "PB62 `{bad_attr}()` is removed in Python 3. Instead, use `{good_attr}()` or use "
-    "`six.{bad_attr}()`."
-)
-PB63 = "PB63 `xrange()` is removed in Python 3. Instead, use `range()` or use `six.range()`."
-PB64 = "PB64 {bad_name} is removed in Python 3. Instead, use `six.{six_replacement}`."
-PB65 = (
-    "PB65 Using the old style of declaring metaclasses, which won't work properly with Python 3. "
-    "If you need to support both Python 2 and Python 3, use either `with_metaclass` or "
-    "`add_metaclass` from `six` or `future`. If you don't care about Python 2 support, use "
-    "`class Example(metaclass=MyMetaclass)`."
-)
-PB66 = "PB66 Classes must be new-style classes, meaning they inherit `object` or another class."
-PB60 = (
-    "PB60 Print used as a statement. Please either use `from __future__ import print_function` or "
-    "rewrite to look like a function call, e.g. change `print 'hello'` to `print('hello')`."
-)
-
 
 class Visitor(ast.NodeVisitor):
     """Various lints used by the Pants project and its users."""
@@ -80,15 +52,9 @@ class Visitor(ast.NodeVisitor):
 
         This is needed for checking PB13.
         """
-        if PY2:
-            expr = with_node.context_expr
-            with_context_exprs = {expr} if isinstance(expr, ast.Call) else set()
-        else:
-            with_context_exprs = {
-                node.context_expr
-                for node in with_node.items
-                if isinstance(node.context_expr, ast.Call)
-            }
+        with_context_exprs = {
+            node.context_expr for node in with_node.items if isinstance(node.context_expr, ast.Call)
+        }
         self.with_call_exprs.update(with_context_exprs)
 
     def check_for_pb10(self, class_def_node):
@@ -107,15 +73,7 @@ class Visitor(ast.NodeVisitor):
 
     def check_for_pb11_and_pb12(self, bool_op_node):
         def is_constant(expr):
-            if PY2:
-                is_name_constant = isinstance(expr, ast.Name) and expr.id in (
-                    "True",
-                    "False",
-                    "None",
-                )
-            else:
-                is_name_constant = isinstance(expr, ast.NameConstant)
-            return isinstance(expr, (ast.Num, ast.Str)) or is_name_constant
+            return isinstance(expr, (ast.Num, ast.Str)) or isinstance(expr, ast.NameConstant)
 
         if not isinstance(bool_op_node.op, (ast.And, ast.Or)):
             return
@@ -151,7 +109,7 @@ class Visitor(ast.NodeVisitor):
         self.generic_visit(with_node)
 
 
-class Plugin(object):
+class Plugin:
     name = PLUGIN_NAME
     version = PLUGIN_VERSION
 
@@ -165,7 +123,7 @@ class Plugin(object):
             yield line, col, msg, type(self)
 
 
-class OptionalPlugin(object):
+class OptionalPlugin:
     """A plugin that's disabled by default."""
 
     name = PLUGIN_NAME
@@ -272,114 +230,3 @@ class TrailingSlashesPlugin(OptionalPlugin):
             col_offset = len(stripped_line) - 1
             if stripped_line.endswith("\\") and not has_exception(line_number, col_offset):
                 self.errors.append((line_number, col_offset, PB30))
-
-
-class SixVisitor(ast.NodeVisitor):
-
-    PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
-
-    def __init__(self, lines):
-        self.lines = lines
-        self.errors = []
-
-    def check_for_pb60(self, print_node):
-        # This checks for a print statement being used _like_ a print function, e.g.
-        # `print("hello")`. It is still technically a print _statement_ rather than _function_, but
-        # it behaves the same as a print function.
-        logical_line = self.lines[print_node.lineno - 1]
-        print_offset = logical_line.index("print")
-        stripped_line = logical_line[print_offset + len("print") :]
-        if not self.PRINT_FUNCTION_REGEX.match(stripped_line):
-            self.errors.append((print_node.lineno, print_node.col_offset, PB60))
-
-    def check_for_pb61(self, try_except_node):
-        for handler in try_except_node.handlers:
-            logical_line = self.lines[handler.lineno - 1]
-            except_offset = logical_line.index("except")
-            stripped_line = logical_line[except_offset + len("except") :]
-            if handler.name and " as " not in stripped_line:
-                self.errors.append((handler.lineno, handler.col_offset, PB61))
-
-    def check_for_pb62_and_63(self, call_node):
-        dict_iterators = {"iteritems": "items", "iterkeys": "keys", "itervalues": "values"}
-        if isinstance(call_node.func, ast.Attribute):
-            # Not a perfect solution since a user could have a dictionary named six or something
-            # similar. However, this should catch most cases where people are using iter* without
-            # six.
-            attr = call_node.func.attr
-            if attr in dict_iterators and getattr(call_node.func.value, "id") != "six":
-                self.errors.append(
-                    (
-                        call_node.lineno,
-                        call_node.col_offset,
-                        PB62.format(bad_attr=attr, good_attr=dict_iterators[attr]),
-                    )
-                )
-        if isinstance(call_node.func, ast.Name) and call_node.func.id == "xrange":
-            self.errors.append((call_node.lineno, call_node.col_offset, PB63))
-
-    def check_for_pb64(self, name_node):
-        bad_names = {"basestring": "string_types", "unicode": "text_type"}
-        name = name_node.id
-        if name in bad_names:
-            self.errors.append(
-                (
-                    name_node.lineno,
-                    name_node.col_offset,
-                    PB64.format(bad_name=name, six_replacement=bad_names[name]),
-                )
-            )
-
-    def check_for_pb65(self, class_def_node):
-        for node in class_def_node.body:
-            if not isinstance(node, ast.Assign):
-                continue
-            for name in node.targets:
-                if not isinstance(name, ast.Name):
-                    continue
-                if name.id == "__metaclass__":
-                    self.errors.append((name.lineno, name.col_offset, PB65))
-
-    def check_for_pb66(self, class_def_node):
-        if not class_def_node.bases:
-            self.errors.append((class_def_node.lineno, class_def_node.col_offset, PB66))
-
-    def visit_Call(self, call_node):
-        self.check_for_pb62_and_63(call_node)
-        self.generic_visit(call_node)
-
-    def visit_ClassDef(self, class_def_node):
-        self.check_for_pb65(class_def_node)
-        self.check_for_pb66(class_def_node)
-        self.generic_visit(class_def_node)
-
-    def visit_Name(self, name_node):
-        self.check_for_pb64(name_node)
-        self.generic_visit(name_node)
-
-    def visit_Print(self, print_node):
-        self.check_for_pb60(print_node)
-        self.generic_visit(print_node)
-
-    def visit_TryExcept(self, try_except_node):
-        self.check_for_pb61(try_except_node)
-        self.generic_visit(try_except_node)
-
-
-class SixPlugin(OptionalPlugin):
-    """Several lints to help with Python 2->3 migrations."""
-
-    codes = ["PB6"]
-
-    def __init__(self, tree, lines, options):
-        self._tree = tree
-        self._lines = lines
-        self._options = options
-
-    def run(self):
-        if not self.is_enabled(self._options):
-            return
-        visitor = SixVisitor(lines=self._lines)
-        visitor.visit(self._tree)
-        for line, col, msg in visitor.errors:
-            yield line, col, msg, type(self)
