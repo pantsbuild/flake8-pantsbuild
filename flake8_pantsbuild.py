@@ -7,6 +7,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import ast
 import re
 import sys
+import tokenize
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import version
@@ -15,6 +16,7 @@ else:
 
 PY2 = sys.version_info[0] < 3
 
+PB100 = "PB100 Indentation of {} instead of 2."
 PB601 = (
     "PB601 Using an old-style except statement. Instead of `except ValueError, e`, use "
     "`except ValueError as e`."
@@ -50,10 +52,11 @@ class Visitor(ast.NodeVisitor):
 
     PRINT_FUNCTION_REGEX = re.compile(r"^\s*\(.*\)\s*$")
 
-    def __init__(self, lines):
+    def __init__(self, lines, tokens):
         self.lines = lines
         self.errors = []
         self.with_call_exprs = set()
+        self.check_for_pb100(tokens)
 
     def collect_call_exprs_from_with_node(self, with_node):
         """Save any functions within a `with` statement to `self.with_call_exprs`.
@@ -70,6 +73,24 @@ class Visitor(ast.NodeVisitor):
                 if isinstance(node.context_expr, ast.Call)
             }
         self.with_call_exprs.update(with_context_exprs)
+
+    def check_for_pb100(self, tokens):
+        # NB: This implementation is different. Rather than being AST-based, this is token-based,
+        # so we don't use the AST Visitor pattern.
+        indents = []
+        for token in tokens:
+            token_type, token_text, token_start = token[0:3]
+            if token_type is tokenize.DEDENT:
+                indents.pop()
+            if token_type is tokenize.INDENT:
+                last_indent = len(indents[-1]) if indents else 0
+                current_indent = len(token_text)
+                indents.append(token_text)
+                if current_indent - last_indent != 2:
+                    lineno, col_offset = token_start
+                    self.errors.append(
+                        (lineno, col_offset, PB100.format(current_indent - last_indent))
+                    )
 
     def check_for_pb601(self, try_except_node):
         for handler in try_except_node.handlers:
@@ -217,12 +238,13 @@ class Plugin(object):
     name = "flake8-pantsbuild"
     version = version("flake8-pantsbuild")
 
-    def __init__(self, tree, lines):
+    def __init__(self, tree, lines, file_tokens):
         self._tree = tree
         self._lines = lines
+        self._tokens = file_tokens
 
     def run(self):
-        visitor = Visitor(lines=self._lines)
+        visitor = Visitor(lines=self._lines, tokens=self._tokens)
         visitor.visit(self._tree)
         for line, col, msg in visitor.errors:
             yield line, col, msg, type(self)
@@ -230,5 +252,15 @@ class Plugin(object):
 
 class SixPlugin(Plugin):
     """Several lints to help with Python 2->3 migrations."""
+
+    off_by_default = True
+
+
+class IndentationPlugin(Plugin):
+    """Lint for 2-space indentation.
+
+    This is disabled by default because it conflicts with Flake8's default settings of 4-space
+    indentation.
+    """
 
     off_by_default = True

@@ -10,6 +10,7 @@ from textwrap import dedent
 import pytest
 
 from flake8_pantsbuild import (
+    PB100,
     PB601,
     PB602,
     PB603,
@@ -28,6 +29,39 @@ from flake8_pantsbuild import (
 # that result.out will have the same error twice for every file. This was fixed in 2.1.0, but we
 # can't upgrade past 1.3.0 due to needing to support Python 2. So, we convert result.out_lines to
 # a set in every test for deduplication. See https://pypi.org/project/pytest-flake8dir/.
+
+
+def test_pb_100(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            def one():
+             pass
+
+
+            def four():
+                pass
+
+
+            def two():
+              pass
+
+
+            def hanging():
+              _ = (
+                  "this"
+                  "is"
+                  "ok")
+            """
+        )
+    )
+    result = flake8dir.run_flake8(
+        extra_args=["--enable-extensions", "PB100", "--extend-ignore", "E111"]
+    )
+    assert {
+        "./example.py:2:1: {}".format(PB100.format("1")),
+        "./example.py:6:1: {}".format(PB100.format("4")),
+    } == set(result.out_lines)
 
 
 @pytest.mark.skipif(not PY2, reason="Old-style exceptions cause syntax error with Python 3")
