@@ -11,6 +11,7 @@ import pytest
 
 from flake8_pantsbuild import (
     PB100,
+    PB201,
     PB601,
     PB602,
     PB603,
@@ -62,6 +63,40 @@ def test_pb_100(flake8dir):
         "./example.py:2:1: {}".format(PB100.format("1")),
         "./example.py:6:1: {}".format(PB100.format("4")),
     } == set(result.out_lines)
+
+
+def test_pb_201(flake8dir):
+    flake8dir.make_example_py(
+        dedent(
+            """\
+            from textwrap import dedent
+
+            bad = \\
+                123
+
+            also_bad = "hello" \\
+                "world"
+
+            okay = '''
+                str1 \\
+                str2 \\
+                str3
+                '''
+
+            also_okay = dedent(
+                '''\
+                str
+                '''
+            )
+
+            # this is okay too \\
+            """
+        )
+    )
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB201"])
+    assert {"./example.py:3:7: {}".format(PB201), "./example.py:6:20: {}".format(PB201)} == set(
+        result.out_lines
+    )
 
 
 @pytest.mark.skipif(not PY2, reason="Old-style exceptions cause syntax error with Python 3")

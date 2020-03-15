@@ -8,6 +8,7 @@ import ast
 import re
 import sys
 import tokenize
+from collections import defaultdict
 
 if sys.version_info >= (3, 8):
     from importlib.metadata import version
@@ -17,6 +18,10 @@ else:
 PY2 = sys.version_info[0] < 3
 
 PB100 = "PB100 Indentation of {} instead of 2."
+PB201 = (
+    "PB201 Using a trailing slash (`\\`) instead of parentheses for line continuation. Refer "
+    "to https://www.tutorialspoint.com/How-to-wrap-long-lines-in-Python."
+)
 PB601 = (
     "PB601 Using an old-style except statement. Instead of `except ValueError, e`, use "
     "`except ValueError as e`."
@@ -42,9 +47,19 @@ PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
     "classmethods, respectively, so that inheritance works correctly."
 )
-PB802 = "PB802 `open()` calls should be made within a `with` statement (context manager)"
-PB804 = "PB804 Using a constant on the left-hand side of a logical operator."
-PB805 = "PB805 Using a constant on the right-hand side of an `and` operator."
+PB802 = (
+    "PB802 `open()` calls should be made within a `with` statement (context manager). This is "
+    "important to ensure that the file handler is properly cleaned up."
+)
+PB804 = (
+    "PB804 Using a constant on the left-hand side of a logical operator. This means that the "
+    "left-hand side will always be truthy, so condition will short-circuit and the right-hand side "
+    "will never be evaluated."
+)
+PB805 = (
+    "PB805 Using a constant on the right-hand side of an `and` operator. This means that the "
+    "right-hand side will always be truthy, which is likely not expected."
+)
 
 
 class Visitor(ast.NodeVisitor):
@@ -57,6 +72,7 @@ class Visitor(ast.NodeVisitor):
         self.errors = []
         self.with_call_exprs = set()
         self.check_for_pb100(tokens)
+        self.check_for_pb201(lines=lines, tokens=tokens)
 
     def collect_call_exprs_from_with_node(self, with_node):
         """Save any functions within a `with` statement to `self.with_call_exprs`.
@@ -75,8 +91,6 @@ class Visitor(ast.NodeVisitor):
         self.with_call_exprs.update(with_context_exprs)
 
     def check_for_pb100(self, tokens):
-        # NB: This implementation is different. Rather than being AST-based, this is token-based,
-        # so we don't use the AST Visitor pattern.
         indents = []
         for token in tokens:
             token_type, token_text, token_start = token[0:3]
@@ -91,6 +105,41 @@ class Visitor(ast.NodeVisitor):
                     self.errors.append(
                         (lineno, col_offset, PB100.format(current_indent - last_indent))
                     )
+
+    def check_for_pb201(self, lines, tokens):
+        lines = [line.rstrip("\n") for line in lines]
+        # First generate a set of ranges where we accept trailing slashes, specifically within
+        # comments and strings
+        exception_map = defaultdict(list)
+        for token in tokens:
+            token_type, _, token_start, token_end = token[0:4]
+            if token_type not in (tokenize.COMMENT, tokenize.STRING):
+                continue
+            token_start_line, token_start_col_offset = token_start
+            token_end_line, token_end_col_offset = token_end
+            if token_start_line == token_end_line:
+                exception_map[token_start_line].append(
+                    (token_start_col_offset, token_end_col_offset)
+                )
+            else:
+                exception_map[token_start_line].append((token_start_col_offset, sys.maxsize))
+                for line in range(token_start_line + 1, token_end_line):
+                    exception_map[line].append((0, sys.maxsize))
+                exception_map[token_end_line].append((0, token_end_col_offset))
+
+        def has_exception(lineno, col_offset):
+            for start, end in exception_map.get(lineno, []):
+                if start <= col_offset <= end:
+                    return True
+            return False
+
+        for line_number, line in enumerate(lines):
+            # Tokens are 1-indexed, rather than 0-indexed.
+            line_number += 1
+            stripped_line = line.rstrip()
+            col_offset = len(stripped_line) - 1
+            if stripped_line.endswith("\\") and not has_exception(line_number, col_offset):
+                self.errors.append((line_number, col_offset, PB201))
 
     def check_for_pb601(self, try_except_node):
         for handler in try_except_node.handlers:
@@ -261,6 +310,16 @@ class IndentationPlugin(Plugin):
 
     This is disabled by default because it conflicts with Flake8's default settings of 4-space
     indentation.
+    """
+
+    off_by_default = True
+
+
+class TrailingSlashesPlugin(Plugin):
+    """Check for trailing slashes.
+
+    Flake8 does not automatically check for trailing slashes, but this is a subjective style
+    preference so should be disabled by default.
     """
 
     off_by_default = True
