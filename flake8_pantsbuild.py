@@ -38,7 +38,7 @@ PB607 = (
 )
 PB800 = (
     "PB800 Instead of {name}.{attr} use self.{attr} or cls.{attr} with instance methods and "
-    "classmethods, respectively."
+    "classmethods, respectively, so that inheritance works correctly."
 )
 PB802 = "PB802 `open()` calls should be made within a `with` statement (context manager)"
 PB804 = "PB804 Using a constant on the left-hand side of a logical operator."
@@ -226,3 +226,9 @@ class Plugin(object):
         visitor.visit(self._tree)
         for line, col, msg in visitor.errors:
             yield line, col, msg, type(self)
+
+
+class SixPlugin(Plugin):
+    """Several lints to help with Python 2->3 migrations."""
+
+    off_by_default = True

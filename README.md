@@ -4,14 +4,14 @@ This Flake8 plugin provides several custom lints used by the Pants project and i
 
 ## Installation
 
-If using with Pants, add this to your `pants.ini`:
+If using with Pants, add this to your `pants.toml`:
 
-```ini
+```toml
 [GLOBAL]
-backend_packages2: +['pants.backend.python.lint.flake8']
+backend_packages2.add = ["pants.backend.python.lint.flake8"]
 
 [flake8]
-extra_requirements: +['flake8-pantsbuild']
+extra_requirements.add = ["flake8-pantsbuild"]
 ```
 
 If using Flake8 without Pants, install with:
@@ -22,25 +22,27 @@ $ pip install flake8-pantsbuild
 
 ## Usage
 
-If using with Pants, run `./pants lint2 ::` as usual.
+If using with Pants, run `./pants lint file.py` as usual.
 
-If using without Pants, run `flake8 your_module.py` [as usual](http://flake8.pycqa.org/en/latest/user/invocation.html).
+If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/en/latest/user/invocation.html).
 
 ## Error Codes
 
-| Error code | Description                                                          |
-|:----------:|:--------------------------------------------------------------------:|
-| PB601      | Using old style `except` statements instead of the `as` keyword      |
-| PB602      | Using `iteritems`, `iterkeys`, or `itervalues` (removed in Python 3) |
-| PB603      | Using `xrange` (removed in Python 3)                                 |
-| PB604      | Using `basestring` or `unicode` (removed in Python 3)                |
-| PB605      | Using metaclasses incompatible with Python 3                         |
-| PB606      | Found Python 2 old-style classes (not inheriting `object`)           |
-| PB607      | Using print statements, rather than print functions                  |
-| PB800      | Found bad reference to class attribute                               |
-| PB802      | Using `open` without a `with` statement (context manager)            |
-| PB804      | Using a constant on the left-hand side of a logical operator         |
-| PB805      | Using a constant on the right-hand side of an and operator           |
+| Error code | Description                                                     | Notes                |
+|:----------:|:---------------------------------------------------------------:|:--------------------:|
+| PB601      | Using old style `except` statements instead of the `as` keyword | Disabled by default¹ |
+| PB602      | Using `iteritems`, `iterkeys`, or `itervalues`                  | Disabled by default¹ |
+| PB603      | Using `xrange`                                                  | Disabled by default¹ |
+| PB604      | Using `basestring` or `unicode`                                 | Disabled by default¹ |
+| PB605      | Using metaclasses incompatible with Python 3                    | Disabled by default¹ |
+| PB606      | Found Python 2 old-style classes (not inheriting `object`)      | Disabled by default¹ |
+| PB607      | Using print statements, rather than print functions             | Disabled by default¹ |
+| PB800      | Used class attribute that breaks inheritance                    |                      |
+| PB802      | Using `open` without a `with` statement (context manager)       |                      |
+| PB804      | Using a constant on the left-hand side of a logical operator    |                      |
+| PB805      | Using a constant on the right-hand side of an and operator      |                      |
+
+¹ To enable the `PB6*` checks for Python 2->3 lints, set `--enable-extensions PB6`. 
 
 ## Migration from `pantsbuild.pants.contrib.python.checks.checker`
 
