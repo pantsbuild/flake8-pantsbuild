@@ -147,6 +147,7 @@ You may run certain environments with `tox -e` (run `tox -a` to see all options)
 
 ```bash
 $ tox -e format-run
+$ tox -e typecheck
 $ tox -e py36
 ```
 

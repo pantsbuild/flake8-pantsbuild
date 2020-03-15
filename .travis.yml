@@ -3,8 +3,8 @@ install:
   - pip install tox
 jobs:
   include:
-    - name: Format check
-      script: tox -e format-check
+    - name: Format and type check
+      script: tox -e format-check,typecheck
     - name: Python 3.6
       python: "3.6"
       script: tox -e py36
