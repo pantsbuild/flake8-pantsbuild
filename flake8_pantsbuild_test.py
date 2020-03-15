@@ -11,7 +11,6 @@ import pytest
 
 from flake8_pantsbuild import (
     PB100,
-    PB200,
     PB201,
     PB601,
     PB602,
@@ -66,32 +65,6 @@ def test_pb_100(flake8dir):
     } == set(result.out_lines)
 
 
-def test_pb_200(flake8dir):
-    # NB: we use `.format()` to inject whitespace to ensure that IDEs don't remove it.
-    flake8dir.make_example_py(
-        dedent(
-            """\
-            b1 = "hello"{s}
-            b2 = (
-                "hi"{s}
-                "there!"
-            )
-
-            g1 = "I love space...             "
-            # comments get a free pass{s}{s}{s}
-            """.format(
-                s=" "
-            )
-        )
-    )
-    result = flake8dir.run_flake8(
-        extra_args=["--enable-extensions", "PB2", "--extend-ignore", "W291"]
-    )
-    assert {"./example.py:1:13: {}".format(PB200), "./example.py:3:9: {}".format(PB200)} == set(
-        result.out_lines
-    )
-
-
 def test_pb_201(flake8dir):
     flake8dir.make_example_py(
         dedent(
@@ -120,7 +93,7 @@ def test_pb_201(flake8dir):
             """
         )
     )
-    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB2"])
+    result = flake8dir.run_flake8(extra_args=["--enable-extensions", "PB201"])
     assert {"./example.py:3:7: {}".format(PB201), "./example.py:6:20: {}".format(PB201)} == set(
         result.out_lines
     )

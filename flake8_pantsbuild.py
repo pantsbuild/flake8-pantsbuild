@@ -18,7 +18,6 @@ else:
 PY2 = sys.version_info[0] < 3
 
 PB100 = "PB100 Indentation of {} instead of 2."
-PB200 = "PB200 Line has trailing whitespace."
 PB201 = (
     "PB201 Line has trailing slashes (`\\`). Instead, use parentheses to wrap the line. Refer "
     "to https://www.tutorialspoint.com/How-to-wrap-long-lines-in-Python."
@@ -73,7 +72,7 @@ class Visitor(ast.NodeVisitor):
         self.errors = []
         self.with_call_exprs = set()
         self.check_for_pb100(tokens)
-        self.check_for_pb200_and_pb201(lines=lines, tokens=tokens)
+        self.check_for_pb201(lines=lines, tokens=tokens)
 
     def collect_call_exprs_from_with_node(self, with_node):
         """Save any functions within a `with` statement to `self.with_call_exprs`.
@@ -107,10 +106,10 @@ class Visitor(ast.NodeVisitor):
                         (lineno, col_offset, PB100.format(current_indent - last_indent))
                     )
 
-    def check_for_pb200_and_pb201(self, lines, tokens):
+    def check_for_pb201(self, lines, tokens):
         lines = [line.rstrip("\n") for line in lines]
-        # First generate a set of ranges where we accept trailing slashes and whitespace,
-        # specifically within comments and strings
+        # First generate a set of ranges where we accept trailing slashes, specifically within
+        # comments and strings
         exception_map = defaultdict(list)
         for token in tokens:
             token_type, _, token_start, token_end = token[0:4]
@@ -128,10 +127,9 @@ class Visitor(ast.NodeVisitor):
                     exception_map[line].append((0, sys.maxsize))
                 exception_map[token_end_line].append((0, token_end_col_offset))
 
-        def has_exception(lineno, exception_start, exception_end=None):
-            exception_end = exception_end or exception_start
+        def has_exception(lineno, col_offset):
             for start, end in exception_map.get(lineno, []):
-                if exception_start >= start and exception_end <= end:
+                if start <= col_offset <= end:
                     return True
             return False
 
@@ -139,14 +137,9 @@ class Visitor(ast.NodeVisitor):
             # Tokens are 1-indexed, rather than 0-indexed.
             line_number += 1
             stripped_line = line.rstrip()
-            if stripped_line != line and not has_exception(
-                line_number, len(stripped_line), len(line)
-            ):
-                self.errors.append((line_number, len(stripped_line), PB200))
-            if stripped_line.endswith("\\") and not has_exception(
-                line_number, len(stripped_line) - 1
-            ):
-                self.errors.append((line_number, len(stripped_line) - 1, PB201))
+            col_offset = len(stripped_line) - 1
+            if stripped_line.endswith("\\") and not has_exception(line_number, col_offset):
+                self.errors.append((line_number, col_offset, PB201))
 
     def check_for_pb601(self, try_except_node):
         for handler in try_except_node.handlers:
@@ -322,11 +315,8 @@ class IndentationPlugin(Plugin):
     off_by_default = True
 
 
-class TrailingWhitespacePlugin(Plugin):
-    """Check for trailing whitespace and slashes.
-
-    Flake8 already has lints for trailing whitespace, but the custom lints are more permissive,
-    such as allowing for whitespace in comments.
+class TrailingSlashesPlugin(Plugin):
+    """Check for trailing slashes.
 
     Flake8 does not automatically check for trailing slashes, but this is a subjective style
     preference so should be disabled by default.

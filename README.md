@@ -31,7 +31,6 @@ If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/
 | Error code | Description                                                     | Notes                |
 |:----------:|:---------------------------------------------------------------:|:--------------------:|
 | PB100      | Check for 2-space indentation                                   | Disabled by default¹ |
-| PB200      | Check for trailing whitespace                                   | Disabled by default² |
 | PB201      | Check for trailing slashes (`\`)                                | Disabled by default² |
 | PB601      | Using old style `except` statements instead of the `as` keyword | Disabled by default³ |
 | PB602      | Using `iteritems`, `iterkeys`, or `itervalues`                  | Disabled by default³ |
@@ -46,7 +45,7 @@ If using without Pants, run `flake8 file.py` [as usual](http://flake8.pycqa.org/
 | PB805      | Using a constant on the right-hand side of an and operator      |                      |
 
 ¹ To enable the `PB100` indentation lint, set `--enable-extensions=PB100`. You'll need to disable `E111` (check for 4-space indentation) via `--extend-ignore=E111`. You'll likely want to disable `E121`, `E124`, `E125`, `E127`, and `E128` as well.
-² To enable the `PB2*` trailing whitespace lints, set `--enable-extensions=PB2`. You'll need to disable `W291` and `W293`, which are stricter versions of the `PB2*` lints, via `--extend-ignore=W291,W293`.
+² To enable the `PB201` trailing slash lint, set `--enable-extensions=PB201`.
 ³ To enable the `PB6*` checks for Python 2->3 lints, set `--enable-extensions=PB6`. 
 
 ## Migration from `pantsbuild.pants.contrib.python.checks.checker`
